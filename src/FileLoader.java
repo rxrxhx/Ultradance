@@ -6,33 +6,63 @@ import java.util.Scanner;
 public class FileLoader {
 	
 	private ArrayList<Metadata> metadata = new ArrayList<Metadata>();
+	private ArrayList<Move> loadedMoves = new ArrayList<Move>();
 	private String path;
 	public FileLoader(String path)
 	{
 		this.path = path;
+		loadFile();
 	}
 	
-	public ArrayList<Move> loadFile()
-	{
-		ArrayList<Move> loadedMoves = new ArrayList<Move>();
-		Scanner loadedFile = genScanner();
-        String data;
-        int lineCount = 0;
-        
-		 while (loadedFile.hasNextLine()) {
-		        data = loadedFile.nextLine();
-		        if (lineCount < 11 && data.charAt(0) == '#')
-		        	readMetadata(data);
-		        else
-		        	loadedMoves.add(translateLine(data, lineCount));
-		      }
-			 
-		return loadedMoves;
-	}
+	
 	
 	public ArrayList<Metadata> getMetadata()
 	{
 		return metadata;
+	}
+	
+	public ArrayList<Move> getMoves()
+	{
+		return loadedMoves;
+	}
+	
+	private void loadFile()
+	{
+		ArrayList<String> moveInstructions;
+		Scanner loadedFile = genScanner();
+        String data;
+        boolean hasBegun = false;
+		moveInstructions = new ArrayList<String>();
+        
+		 while (loadedFile.hasNextLine()) {
+
+		        data = loadedFile.nextLine();
+		        if (!data.isEmpty())
+		        {
+		        	if (data.charAt(0) == '#')
+			        	readMetadata(data);
+			        else
+			        {
+			        	if (data.contains("$"))
+			        	{
+			        		moveInstructions = new ArrayList<String>();
+			        		moveInstructions.add(data);
+			        	}			        	
+			        	
+			        	if (data.charAt(0) == '%')
+			        	{
+			        		loadedMoves.add(translateLine(moveInstructions));	
+
+			        	}
+			        	else
+			        	{
+			        		moveInstructions.add(data);
+			        	}
+			        	
+			        }
+		        }
+		        
+		      }
 	}
 	
 	private Scanner genScanner()
@@ -48,10 +78,19 @@ public class FileLoader {
 		return fileReader;
 	}
 	
-	private Move translateLine(String line, int lineNr)
+	private Move translateLine(ArrayList<String> instructions)
 	{
+		String info = "";
+		for(String item: instructions)
+		{
+			if(item.charAt(0) != '$' && item.charAt(0) != '%')
+			{
+				info = info + item;
+			}
+		}
+		Move out = new Move(Integer.parseInt(instructions.get(0).replace("$", "")), info);
 		
-		return null;
+		return out;
 		
 	}
 
@@ -60,6 +99,7 @@ public class FileLoader {
 		//puts Metadata in Metadata Objects
 		metadata.add(new Metadata(line.split(":")[0].replace("#", ""), line.split(":")[1]));
 	}
+	
 	
 	
 
